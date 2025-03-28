@@ -13,14 +13,14 @@ import (
 
 func main() {
 	// Initialize MEV Guardian Engine
-	guardian := mevgrandmotherguardia.NewMEVGuardianEngine()
+	guardian := mevgrandmothersguardia.NewMEVGuardianEngine()
 
 	// Add protected senders
 	guardian.AddProtectedSender("0xAlice")
 	guardian.AddProtectedSender("0xCarol")
 
 	// Example transactions
-	txs := []*mevgrandmotherguardia.Tx{
+	txs := []*mevgrandmothersguardia.Tx{
 		{
 			Hash:      "0x111",
 			Sender:    "0xAlice",
