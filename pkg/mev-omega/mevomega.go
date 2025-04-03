@@ -2,11 +2,17 @@ package mevomega
 
 import (
 	"fmt"
+	"log"
 	"math/big"
 	"sort"
 	"sync"
 	"time"
 )
+
+// Insert helper function at the top of the file (after imports)
+func EthToWei(eth int64) *big.Int {
+	return new(big.Int).Mul(big.NewInt(eth), big.NewInt(1000000000000000000))
+}
 
 // OmegaTx = advanced ETH transactions.
 type OmegaTx struct {
@@ -63,19 +69,39 @@ func (oc *OmegaCore) OptimizeTransactionOrdering() []*OmegaTx {
 	oc.graph.mutex.RLock()
 	defer oc.graph.mutex.RUnlock()
 
-	resolved := map[string]bool{}
+	resolved := make(map[string]bool)
+	visiting := make(map[string]bool) // for cycle detection
 	var orderedTxs []*OmegaTx
 
 	var dfsResolve func(string)
 	dfsResolve = func(txHash string) {
+		if visiting[txHash] {
+			log.Printf("Cycle detected at transaction %s", txHash)
+			return
+		}
 		if resolved[txHash] {
 			return
 		}
-		for _, dep := range oc.graph.Nodes[txHash].Dependencies {
-			dfsResolve(dep)
+		visiting[txHash] = true
+
+		tx, exists := oc.graph.Nodes[txHash]
+		if !exists {
+			log.Printf("Warning: transaction %s not found in graph!", txHash)
+			visiting[txHash] = false
+			return
 		}
-		orderedTxs = append(orderedTxs, oc.graph.Nodes[txHash])
+
+		for _, dep := range tx.Dependencies {
+			if _, exists := oc.graph.Nodes[dep]; !exists {
+				log.Printf("Warning: dependency %s not found for transaction %s", dep, txHash)
+			} else {
+				dfsResolve(dep)
+			}
+		}
+
+		orderedTxs = append(orderedTxs, tx)
 		resolved[txHash] = true
+		visiting[txHash] = false
 	}
 
 	for txHash := range oc.graph.Nodes {
@@ -118,13 +144,13 @@ func (oc *OmegaCore) ExecuteStrategicBundle(bundle []*OmegaTx) {
 
 // Example demonstrates MEV Omega's stuff.
 func Example() {
-	omega := NewOmegaCore(5, big.NewInt(1500e18), big.NewInt(1e12)) // 1500 ETH Flashloan limit, gas cap
+	omega := NewOmegaCore(5, EthToWei(1500), EthToWei(1e12)) // 1500 ETH Flashloan limit, gas cap
 
-	omega.AddTx(&OmegaTx{"0x1", "0xA", "0xUniswap", big.NewInt(200e9), big.NewInt(500e18), big.NewInt(300e18), []string{}, time.Now()})
-	omega.AddTx(&OmegaTx{"0x2", "0xB", "0xCurve", big.NewInt(250e9), big.NewInt(400e18), big.NewInt(200e18), []string{"0x1"}, time.Now()})
-	omega.AddTx(&OmegaTx{"0x3", "0xC", "0xSushi", big.NewInt(300e9), big.NewInt(600e18), big.NewInt(400e18), []string{"0x1"}, time.Now()})
-	omega.AddTx(&OmegaTx{"0x4", "0xD", "0xBalancer", big.NewInt(350e9), big.NewInt(700e18), big.NewInt(500e18), []string{"0x2", "0x3"}, time.Now()})
-	omega.AddTx(&OmegaTx{"0x5", "0xE", "0x1inch", big.NewInt(400e9), big.NewInt(800e18), big.NewInt(600e18), []string{"0x4"}, time.Now()})
+	omega.AddTx(&OmegaTx{"0x1", "0xA", "0xUniswap", big.NewInt(200e9), EthToWei(500), EthToWei(300), []string{}, time.Now()})
+	omega.AddTx(&OmegaTx{"0x2", "0xB", "0xCurve", big.NewInt(250e9), big.NewInt(400e9), EthToWei(200), []string{"0x1"}, time.Now()})
+	omega.AddTx(&OmegaTx{"0x3", "0xC", "0xSushi", big.NewInt(300e9), EthToWei(600), EthToWei(400), []string{"0x1"}, time.Now()})
+	omega.AddTx(&OmegaTx{"0x4", "0xD", "0xBalancer", big.NewInt(350e9), EthToWei(700), EthToWei(500), []string{"0x2", "0x3"}, time.Now()})
+	omega.AddTx(&OmegaTx{"0x5", "0xE", "0x1inch", big.NewInt(400e9), EthToWei(800), EthToWei(600), []string{"0x4"}, time.Now()})
 
 	optimalOrder := omega.OptimizeTransactionOrdering()
 	bundle := omega.SelectOptimalBundle(optimalOrder)

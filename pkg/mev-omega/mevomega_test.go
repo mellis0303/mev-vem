@@ -9,13 +9,6 @@ import (
 	"time"
 )
 
-// EthToWei is a helper for converting an integer ETH value to Wei.
-func EthToWei(eth int64) *big.Int {
-	wei := new(big.Int)
-	wei.Mul(big.NewInt(eth), big.NewInt(1e18))
-	return wei
-}
-
 func TestAddTxAndOrder(t *testing.T) {
 	// Use helper to avoid float literals (which can be imprecise for big.Int)
 	omega := NewOmegaCore(5, EthToWei(1500), big.NewInt(1e12))

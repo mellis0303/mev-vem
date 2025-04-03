@@ -11,9 +11,13 @@ import (
 	"github.com/mellis0303/mev-vem/pkg/mev-hypersuper"
 )
 
+func EthToWei(eth int64) *big.Int {
+	return new(big.Int).Mul(big.NewInt(eth), big.NewInt(1000000000000000000))
+}
+
 func main() {
 	// Initialize Event Horizon Core
-	eh := mevhypersuper.NewEventHorizon(5, big.NewInt(1000e18)) // 1000 ETH Flashloan limit
+	eh := mevhypersuper.NewEventHorizon(5, EthToWei(1000)) // 1000 ETH Flashloan limit
 
 	// Example transactions with dependencies
 	txs := []*mevhypersuper.EventTx{
@@ -22,7 +26,7 @@ func main() {
 			Sender:    "0xA",
 			Receiver:  "0xUni",
 			GasPrice:  big.NewInt(100e9),
-			Value:     big.NewInt(400e18),
+			Value:     EthToWei(400),
 			DependsOn: []string{},
 			Timestamp: time.Now(),
 		},
@@ -31,7 +35,7 @@ func main() {
 			Sender:    "0xB",
 			Receiver:  "0xSushi",
 			GasPrice:  big.NewInt(150e9),
-			Value:     big.NewInt(300e18),
+			Value:     EthToWei(300),
 			DependsOn: []string{"0xa"},
 			Timestamp: time.Now(),
 		},
@@ -40,7 +44,7 @@ func main() {
 			Sender:    "0xC",
 			Receiver:  "0xCurve",
 			GasPrice:  big.NewInt(200e9),
-			Value:     big.NewInt(500e18),
+			Value:     EthToWei(500),
 			DependsOn: []string{"0xb"},
 			Timestamp: time.Now(),
 		},
@@ -49,7 +53,7 @@ func main() {
 			Sender:    "0xD",
 			Receiver:  "0xBalancer",
 			GasPrice:  big.NewInt(250e9),
-			Value:     big.NewInt(450e18),
+			Value:     EthToWei(450),
 			DependsOn: []string{},
 			Timestamp: time.Now(),
 		},
@@ -58,7 +62,7 @@ func main() {
 			Sender:    "0xE",
 			Receiver:  "0x1inch",
 			GasPrice:  big.NewInt(300e9),
-			Value:     big.NewInt(600e18),
+			Value:     EthToWei(600),
 			DependsOn: []string{"0xc", "0xd"},
 			Timestamp: time.Now(),
 		},

@@ -8,6 +8,11 @@ import (
 	"time"
 )
 
+// Insert helper function at the top of the file (after imports)
+func EthToWei(eth int64) *big.Int {
+	return new(big.Int).Mul(big.NewInt(eth), big.NewInt(1000000000000000000))
+}
+
 // EventTx = ETH tx with real-time dependency tracking.
 type EventTx struct {
 	Hash       string
@@ -116,15 +121,15 @@ func (eh *EventHorizonCore) ExecuteBundle(bundle []*EventTx) {
 	}
 }
 
-// Example demonstrates Event Horizon’s MEV strategy.
+// Example demonstrates Event Horizon's MEV strategy.
 func Example() {
-	eh := NewEventHorizon(5, big.NewInt(1000e18)) // 1000 ETH Flashloan limit
+	eh := NewEventHorizon(5, EthToWei(1000)) // 1000 ETH Flashloan limit
 
-	eh.AddTransaction(&EventTx{"0xa", "0xA", "0xUni", big.NewInt(100e9), big.NewInt(400e18), nil, []string{}, time.Now()})
-	eh.AddTransaction(&EventTx{"0xb", "0xB", "0xSushi", big.NewInt(150e9), big.NewInt(300e18), nil, []string{"0xa"}, time.Now()})
-	eh.AddTransaction(&EventTx{"0xc", "0xC", "0xCurve", big.NewInt(200e9), big.NewInt(500e18), nil, []string{"0xb"}, time.Now()})
-	eh.AddTransaction(&EventTx{"0xd", "0xD", "0xBalancer", big.NewInt(250e9), big.NewInt(450e18), nil, []string{}, time.Now()})
-	eh.AddTransaction(&EventTx{"0xe", "0xE", "0x1inch", big.NewInt(300e9), big.NewInt(600e18), nil, []string{"0xc", "0xd"}, time.Now()})
+	eh.AddTransaction(&EventTx{"0xa", "0xA", "0xUni", big.NewInt(100e9), EthToWei(400), nil, []string{}, time.Now()})
+	eh.AddTransaction(&EventTx{"0xb", "0xB", "0xSushi", big.NewInt(150e9), EthToWei(300), nil, []string{"0xa"}, time.Now()})
+	eh.AddTransaction(&EventTx{"0xc", "0xC", "0xCurve", big.NewInt(200e9), EthToWei(500), nil, []string{"0xb"}, time.Now()})
+	eh.AddTransaction(&EventTx{"0xd", "0xD", "0xBalancer", big.NewInt(250e9), EthToWei(450), nil, []string{}, time.Now()})
+	eh.AddTransaction(&EventTx{"0xe", "0xE", "0x1inch", big.NewInt(300e9), EthToWei(600), nil, []string{"0xc", "0xd"}, time.Now()})
 
 	bundle := eh.GenerateOptimalBundle()
 	eh.ExecuteBundle(bundle)

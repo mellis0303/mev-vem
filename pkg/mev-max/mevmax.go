@@ -61,7 +61,7 @@ func NewMEVMempool() *MEVMempool {
 
 // evaluates transaction profitability for MEV optimization.
 func CalculatePriority(tx *Transaction) int64 {
-	return int64(tx.GasFee + tx.Profit)
+	return int64(tx.GasFee) + tx.Profit
 }
 
 // adds a transaction to the mempool prioritized by profitability.

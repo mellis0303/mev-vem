@@ -64,8 +64,8 @@ func (mg *MEVGuardianEngine) SubmitTransaction(tx *Tx) {
 
 // DecryptTransactions simulates safe decryption at block inclusion.
 func (mg *MEVGuardianEngine) DecryptTransactions() []*Tx {
-	mg.pool.mutex.RLock()
-	defer mg.pool.mutex.RUnlock()
+	mg.pool.mutex.Lock()
+	defer mg.pool.mutex.Unlock()
 
 	var decrypted []*Tx
 	for _, tx := range mg.pool.txs {
